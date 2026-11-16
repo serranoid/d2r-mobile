@@ -255,7 +255,7 @@ def main():
 
     # 一、改写游戏程序（与 tools/product.sh build 的 touch 那一种相同）
     # 1. Rewrite the game program (same as the touch variant of tools/product.sh build)
-    out = os.path.join(ROOT, 'build', 'cache', 'dm', 'out', P + '-touch'); os.makedirs(out, exist_ok=True)
+    out = os.path.join(ROOT, 'build', 'cache', 'dm', 'out', P + '-touch' + ('-txt' if os.environ.get('DM_TXT_TABLES') == '1' else '')); os.makedirs(out, exist_ok=True)   # MOD: el modo txt lleva su propia caché, o este paso se salta y el paquete sale sin los cortes
     def patch():
         for m in MODS: run([PY, os.path.join(HERE, 'patch_nso.py'), os.path.join(game, 'ExeFS', m), out, m], env={'DM_RULESET': 'touch-run-v4'}, log=os.path.join(out, m + '.patch.log'), what='改写 ' + m)
     step('改写游戏程序', lambda: all(os.path.isfile(os.path.join(out, m + '.patched.bin')) and os.path.isfile(os.path.join(out, m + '.gates.tsv')) for m in MODS), patch)
