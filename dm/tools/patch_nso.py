@@ -182,6 +182,13 @@ if RULE_RUN:
                  f' | This game program (build ID {BUILD_ID}) is not supported by D2R Mobile yet: only 1.0.34.0 (build ID {RULE_BUILD}) is.')
     RULE_ORIG_SHA = hashlib.sha256(IMG).hexdigest()
 cuts = list(CUTS.get(BUILD_ID, []))
+# MOD: DM_TXT_TABLES=1 hace que el juego compile las tablas desde los .txt en vez de leer los .bin.
+# El cargador (main+0x4d9040) y los de itemscode / misscode / tccode / moncode leen el mismo indicador (byte main+0x21278b9,
+# que en Switch nadie pone a 1 porque no existe la opción -txt); aquí cada lectura se sustituye por mov w8,#1.
+# El indicador de «escribir el .bin resultante» (main+0x212736f) no se toca. Sin verificar en dispositivo.
+if os.environ.get('DM_TXT_TABLES') == '1' and NAME == 'main':
+    for _o in (0x4d9068, 0x4f0124, 0x4fa848, 0x50ee44, 0x515228, 0x51fa64):
+        cuts.append((_o, '08e56239', '28008052', 'MOD txt-tables: ldrb w8,[x8,#0x8b9] -> mov w8,#1 (modo de compilar tablas desde .txt)'))
 # 触屏版规则域默认同时带宿主私有门；规则闸门可显式关闭，保留同一出包入口和规则域。
 # The touchscreen rule domain by default also carries the host-private gates; the rule gate check can turn them off explicitly, keeping the same packaging entry point and rule domain.
 PRIVATE_GATES = os.environ.get("DM_PRIVATE_GATES", "1") != "0"
@@ -997,7 +1004,7 @@ P = lambda ext: os.path.join(outdir, f'{NAME}.{ext}')
 open(P('patched.bin'), 'wb').write(IMG + bytearray(PATCH_OFF - len(IMG)) + patch)
 import hashlib
 with open(os.path.join(outdir, 'build_src.sha256'), 'w') as f:
-    f.write(hashlib.sha256(open(os.path.abspath(__file__), 'rb').read()).hexdigest() + '  patch_nso.py\n')
+    f.write(hashlib.sha256(open(os.path.abspath(__file__), 'rb').read() + os.environ.get('DM_TXT_TABLES', '').encode()).hexdigest() + '  patch_nso.py\n')   # MOD: misma huella que d2rm_android.py
 if PRIVATE_AIM:
     with open(P('aim.tsv'), 'w') as f:
         f.write('# RULESET\tskill-aim-v1-private\n# ORIGINAL_CALL\t0x2faf04\t97fee7fd\n# ORIGINAL_CALLEE\t0x2b4ef8\n# SKILL_CALLER\t0x2b5b80\n# SVC\t0x86\n# INPUT\tactual GetNpad sampled right; move axis unchanged\n')
