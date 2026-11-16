@@ -140,7 +140,7 @@ def main():
                            log=os.path.join(out, m + '.patch.log'), what='改写 ' + m)
     # 做过的标准：产物齐，且产物记下的改写器指纹（build_src.sha256）就是这份源码的 patch_nso.py——改写器更新过（产物代号可能没变）就重做
     # Done means: the products are complete and the rewriter fingerprint they record (build_src.sha256) is this source's patch_nso.py -- redo it when the rewriter was updated (the product code may not have changed)
-    src = hashlib.sha256(open(os.path.join(HERE, 'patch_nso.py'), 'rb').read()).hexdigest()
+    src = hashlib.sha256(open(os.path.join(HERE, 'patch_nso.py'), 'rb').read() + os.environ.get('DM_TXT_TABLES', '').encode()).hexdigest()   # MOD: el modo txt cambia el programa reescrito
     def patched():
         try: rec = open(os.path.join(out, 'build_src.sha256')).read().split()[0]
         except (OSError, IndexError): return False

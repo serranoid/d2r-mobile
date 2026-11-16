@@ -234,6 +234,18 @@ with tempfile.TemporaryDirectory() as t:
         open(os.path.join(dst,'ctrl_touch'),'w').write('触屏版布局在 layouts/xtouch_lay、ztouch_console_lay、0touch_console_switch_lay（dm_padmode.c 见到本文件才改写前缀）\n')
         GENERATED_OVERLAYS.append(dst)
         return new[0], os.path.getsize(os.path.join(dst,'data',new[0]))
+    # MOD: DM_MOD_DIR=<carpeta> mete en el overlay cada fichero de esa carpeta por su ruta relativa (data/global/excel/weapons.bin ...).
+    # Va al final para que el mod mande sobre lo que genera el port; una ruta que el port ya reemplaza se avisa.
+    _mod=os.environ.get('DM_MOD_DIR','').strip()
+    if _mod:
+        _n=0
+        for _d,_,_fs in os.walk(_mod):
+            for _f in _fs:
+                _k=os.path.relpath(os.path.join(_d,_f),_mod).replace(os.sep,'/').lower()
+                if not _k.startswith('data/'): continue
+                if _k in REPL: print('MOD: pisa un reemplazo del port:',_k)
+                REPL[_k]=os.path.abspath(os.path.join(_d,_f)); _n+=1
+        print(f'MOD: {_n} ficheros de {_mod}')
     n0,z0=emit(REPL,out,'')
     print(f'romfs_overlay：{n0} {z0} 字节，底图 {w}x{h}；前端布局 {len(tl)} 个、挪走键位提示 {ntl} 处')
     for d in (out+'_astc',out+'_astc_variants'): shutil.rmtree(d,ignore_errors=True); os.makedirs(d)
