@@ -1,0 +1,28 @@
+name: Contenedor iOS
+on:
+  workflow_dispatch:
+  push:
+    branches: ['ci/**']
+permissions:
+  contents: read
+jobs:
+  shell:
+    runs-on: macos-26
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Herramientas
+        run: brew list xcodegen >/dev/null 2>&1 || brew install xcodegen
+      - name: Compilar el contenedor
+        run: mod/ci/build_shell.sh
+      - name: Registro de compilación
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build_ci.log
+      - name: Contenedor
+        uses: actions/upload-artifact@v4
+        with:
+          name: DmIOS-app
+          path: out
